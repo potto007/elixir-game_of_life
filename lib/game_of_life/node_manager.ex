@@ -4,6 +4,6 @@ defmodule GameOfLife.NodeManager do
   end
 
   def random_node do
-    all_nodes |> Enum.random
+    all_nodes() |> Enum.random
   end
 end

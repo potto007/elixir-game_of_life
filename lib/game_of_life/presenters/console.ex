@@ -8,41 +8,40 @@ defmodule GameOfLife.Presenters.Console do
   will be visible on x axis.
   `y_padding` Any number. Padding for numbers on y axis.
   """
-  def print(cells, generation_counter, alive_counter, start_x \\ -10, start_y \\ 15, x_size \\ 60, y_size \\ 20, x_padding \\ 5, y_padding \\ 5) do
-    end_x = start_x + x_size
-    end_y = start_y - y_size
-    x_range = start_x..end_x
-    y_range = start_y..end_y
+  alias GameOfLife.GameState
+  alias GameOfLife.Presenters
 
-    for y <- y_range, x <- x_range do
+  # def print(cells, generation_counter, alive_counter, start_x \\ -10, start_y \\ 15, x_size \\ 60, y_size \\ 20, x_padding \\ 5, y_padding \\ 5) do
+  def print(%GameState{} = state, %Presenters{} = dims \\ %Presenters{}) do
+    for y <- Presenters.y_range(dims), x <- Presenters.x_range(dims) do
       # draw y axis
-      if x == start_x do
+      if x == dims.start_x do
         (y
         |> Integer.to_string
-        |> String.rjust(y_padding)) <> "| "
+        |> String.rjust(dims.y_padding)) <> "| "
         |> IO.write
       end
 
-      IO.write(if Enum.member?(cells, {x, y}), do: "O", else: ",")
-      if x == end_x, do: IO.puts ""
+      IO.write(if Enum.member?(state.cells, {x, y}), do: "O", else: ",")
+      if x == Presenters.end_x(dims), do: IO.puts ""
     end
 
     # draw x axis
-    IO.write String.rjust("| ", y_padding + 2)
-    x_length = (round((end_x-start_x)/2))
-    for x <- 0..x_length, do: IO.write "_ "
+    IO.write String.rjust("| ", dims.y_padding + 2)
+    x_length = (round((Presenters.end_x(dims)-dims.start_x)/2))
+    for _x <- 0..x_length, do: IO.write "_ "
     IO.puts ""
-    IO.write String.rjust("/  ", y_padding + 2)
-    for x <- x_range do
-      if rem(x, x_padding) == 0 do
+    IO.write String.rjust("/  ", dims.y_padding + 2)
+    for x <- Presenters.x_range(dims) do
+      if rem(x, dims.x_padding) == 0 do
         x
         |> Integer.to_string
-        |> String.ljust(x_padding)
+        |> String.ljust(dims.x_padding)
         |> IO.write
       end
     end
     IO.puts ""
-    IO.puts "Generation: #{generation_counter}"
-    IO.puts "Alive cells: #{alive_counter}"
+    IO.puts "Generation: #{state.generation_counter}"
+    IO.puts "Alive cells: #{GameState.alive_counter(state)}"
   end
 end

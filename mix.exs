@@ -3,20 +3,20 @@ defmodule GameOfLife.Mixfile do
 
   def project do
     [app: :game_of_life,
-     version: "1.0.0",
-     elixir: "~> 1.2",
+     version: "1.1.0",
+     elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     description: description,
-     package: package,
-     deps: deps]
+     description: description(),
+     package: package(),
+     deps: deps()]
   end
 
   # Configuration for the OTP application
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger],
+    [extra_applications: [:logger],
      mod: {GameOfLife, []}]
   end
 
@@ -31,6 +31,7 @@ defmodule GameOfLife.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
+      # {:esdl2, github: "ninenines/esdl2"},
       {:ex_doc, "~> 0.11.5", only: [:dev]},
       {:earmark, "~> 0.2.1", only: [:dev]},
     ]

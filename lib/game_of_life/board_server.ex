@@ -92,7 +92,7 @@ defmodule GameOfLife.BoardServer do
   end
 
   def change_speed(speed) do
-    stop_game
+    stop_game()
     start_game(speed)
   end
 
@@ -107,7 +107,7 @@ defmodule GameOfLife.BoardServer do
   end
 
   def handle_call(:state, _from, {alive_cells, _tref, generation_counter} = state) do
-    {:reply, {alive_cells, generation_counter}, state}
+    {:reply, %GameOfLife.GameState{cells: alive_cells, generation_counter: generation_counter}, state}
   end
 
   def handle_call({:set_alive_cells, cells}, _from, {_alive_cells, tref, _generation_counter}) do
