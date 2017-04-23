@@ -1,6 +1,7 @@
 defmodule GameOfLife.BoardServer do
   use GenServer
   require Logger
+  alias GameOfLife.BoardState
 
   @moduledoc """
   ## Example
@@ -45,7 +46,7 @@ defmodule GameOfLife.BoardServer do
   # Client
 
   def start_link(alive_cells) do
-    case GenServer.start_link(__MODULE__, {alive_cells, nil, 0}, name: @name) do
+    case GenServer.start_link(__MODULE__, %BoardState{alive_cells: alive_cells}, name: @name) do
       {:ok, pid} ->
         Logger.info "Started #{__MODULE__} master"
         {:ok, pid}
@@ -98,54 +99,60 @@ defmodule GameOfLife.BoardServer do
 
   # Server (callbacks)
 
-  def handle_call(:alive_cells, _from, {alive_cells, _tref, _generation_counter} = state) do
-    {:reply, alive_cells, state}
+  def handle_call(:alive_cells, _from, %BoardState{} = state) do
+    {:reply, state.alive_cells, state}
   end
 
-  def handle_call(:generation_counter, _from, {_alive_cells, _tref, generation_counter} = state) do
-    {:reply, generation_counter, state}
+  def handle_call(:generation_counter, _from, %BoardState{} = state) do
+    {:reply, state.generation_counter, state}
   end
 
-  def handle_call(:state, _from, {alive_cells, _tref, generation_counter} = state) do
-    {:reply, %GameOfLife.GameState{cells: alive_cells, generation_counter: generation_counter}, state}
+  def handle_call(:state, _from, %BoardState{} = state) do
+    {:reply, %GameOfLife.GameState{cells: state.alive_cells,
+              generation_counter: state.generation_counter}, state}
   end
 
-  def handle_call({:set_alive_cells, cells}, _from, {_alive_cells, tref, _generation_counter}) do
-    {:reply, cells, {cells, tref, 0}}
+  def handle_call({:set_alive_cells, cells}, _from, %BoardState{} = state) do
+    {:reply, cells, BoardState.new(cells, state.tref, state.generation_counter)}
   end
 
-  def handle_call({:add_cells, cells}, _from, {alive_cells, tref, generation_counter}) do
-    alive_cells = GameOfLife.Board.add_cells(alive_cells, cells)
-    {:reply, alive_cells, {alive_cells, tref, generation_counter}}
+  def handle_call({:add_cells, cells}, _from, %BoardState{} = state) do
+    alive_cells = GameOfLife.Board.add_cells(state.alive_cells, cells)
+    {:reply, alive_cells,
+      BoardState.new(alive_cells, state.tref, state.generation_counter)}
   end
 
-  def handle_call({:start_game, speed}, _from, {alive_cells, nil = _tref, generation_counter}) do
+  def handle_call({:start_game, speed}, _from,
+      %BoardState{alive_cells: _, tref: nil = _, generation_counter: _} = state) do
     {:ok, tref} = :timer.apply_interval(speed, __MODULE__, :tick, [])
-    {:reply, :game_started, {alive_cells, tref, generation_counter}}
+    {:reply, :game_started,
+      BoardState.new(state.alive_cells, tref, state.generation_counter)}
   end
 
-  def handle_call({:start_game, _speed}, _from, {_alive_cells, _tref, _generation_counter} = state) do
+  def handle_call({:start_game, _speed}, _from, %BoardState{} = state) do
     {:reply, :game_already_running, state}
   end
 
-  def handle_call(:stop_game, _from, {_alive_cells, nil = _tref, _generation_counter} = state) do
+  def handle_call(:stop_game, _from,
+      %BoardState{alive_cells: _, tref: nil = _, generation_counter: _} = state) do
     {:reply, :game_not_running, state}
   end
 
-  def handle_call(:stop_game, _from, {alive_cells, tref, generation_counter}) do
-    {:ok, :cancel} = :timer.cancel(tref)
-    {:reply, :game_stoped, {alive_cells, nil, generation_counter}}
+  def handle_call(:stop_game, _from, %BoardState{} = state) do
+    {:ok, :cancel} = :timer.cancel(state.tref)
+    {:reply, :game_stopped,
+      BoardState.new(state.alive_cells, nil, state.generation_counter)}
   end
 
-  def handle_cast(:tick, {alive_cells, tref, generation_counter}) do
-    keep_alive_task = Task.Supervisor.async({GameOfLife.TaskSupervisor, GameOfLife.NodeManager.random_node}, GameOfLife.Board, :keep_alive_tick, [alive_cells])
-    become_alive_task = Task.Supervisor.async({GameOfLife.TaskSupervisor, GameOfLife.NodeManager.random_node}, GameOfLife.Board, :become_alive_tick, [alive_cells])
+  def handle_cast(:tick, %BoardState{} = state) do
+    keep_alive_task = Task.Supervisor.async({GameOfLife.TaskSupervisor, GameOfLife.NodeManager.random_node}, GameOfLife.Board, :keep_alive_tick, [state.alive_cells])
+    become_alive_task = Task.Supervisor.async({GameOfLife.TaskSupervisor, GameOfLife.NodeManager.random_node}, GameOfLife.Board, :become_alive_tick, [state.alive_cells])
 
     keep_alive_cells = Task.await(keep_alive_task)
     born_cells = Task.await(become_alive_task)
 
     alive_cells = keep_alive_cells ++ born_cells
 
-    {:noreply, {alive_cells, tref, generation_counter + 1}}
+    {:noreply, BoardState.new(alive_cells, state.tref, state.generation_counter + 1)}
   end
 end
