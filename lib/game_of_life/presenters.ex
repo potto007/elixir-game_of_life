@@ -1,6 +1,6 @@
 defmodule GameOfLife.Presenters do
   alias GameOfLife.Presenters
-  
+
   defstruct start_x: -10, x_size: 60, x_padding: 5,
             start_y:  15, y_size: 20, y_padding: 5
 
@@ -9,7 +9,7 @@ defmodule GameOfLife.Presenters do
   end
 
   def end_y(%Presenters{} = dims) do
-    dims.start_y + dims.y_size
+    dims.start_y - dims.y_size
   end
 
   def x_range(%Presenters{} = dims) do
