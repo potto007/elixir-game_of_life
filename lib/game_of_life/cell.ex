@@ -1,4 +1,9 @@
 defmodule GameOfLife.Cell do
+  alias GameOfLife.Cell
+
+  defstruct [:x, :y]
+  @type t :: %Cell{x: integer, y: integer}
+
   def keep_alive?(alive_cells, {x, y} = _alive_cell) do
     case count_neighbours(alive_cells, x, y, 0) do
       2 -> true

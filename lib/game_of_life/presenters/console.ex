@@ -11,7 +11,6 @@ defmodule GameOfLife.Presenters.Console do
   alias GameOfLife.GameState
   alias GameOfLife.Presenters
 
-  # def print(cells, generation_counter, alive_counter, start_x \\ -10, start_y \\ 15, x_size \\ 60, y_size \\ 20, x_padding \\ 5, y_padding \\ 5) do
   def print(%GameState{} = state, %Presenters{} = dims \\ %Presenters{}) do
     for y <- Presenters.y_range(dims), x <- Presenters.x_range(dims) do
       # draw y axis

@@ -26,7 +26,7 @@ defmodule GameOfLife.GamePrinter do
   end
 
   def do_start_sdl_board(nil = _tref) do
-    GameOfLife.Presenters.SDL.Window.start()
+    # GameOfLife.Presenters.SDL.Window.start()
     # {:ok, tref} = :time.apply_interval(@print_speed, __MODULE__, :update_board, [])
     {:sdl_updates_started, nil}
   end
@@ -34,9 +34,10 @@ defmodule GameOfLife.GamePrinter do
   def do_start_sdl_board(tref), do: {:already_displaying_board, tref}
 
   def update_board do
-    {alive_cells, generation_counter} = GameOfLife.BoardServer.state
-    alive_counter = alive_cells |> Enum.count
-    GameOfLife.Presenters.SDL.Renderer.update(alive_cells, generation_counter, alive_counter)
+    :updated
+    # {alive_cells, generation_counter} = GameOfLife.BoardServer.state
+    # alive_counter = alive_cells |> Enum.count
+    # GameOfLife.Presenters.SDL.Renderer.update(alive_cells, generation_counter, alive_counter)
   end
 
   def stop_sdl_board do
@@ -60,12 +61,6 @@ defmodule GameOfLife.GamePrinter do
   def print_board do
     GameOfLife.BoardServer.state()
     |> GameOfLife.Presenters.Console.print()
-  end
-
-  def old_print_board do
-    {alive_cells, generation_counter} = GameOfLife.BoardServer.state
-    alive_counter = alive_cells |> Enum.count
-    GameOfLife.Presenters.Console.print(alive_cells, generation_counter, alive_counter)
   end
 
   def stop_printing_board do
